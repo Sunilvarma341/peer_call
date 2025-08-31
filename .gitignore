@@ -69,6 +69,8 @@ android/app/build/
 **/*.jks
 **/gradle-wrapper.jar
 
+.env
+
 # iOS/macOS
 ios/Pods/
 ios/.symlinks/
