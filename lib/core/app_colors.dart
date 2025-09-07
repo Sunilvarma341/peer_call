@@ -1,0 +1,43 @@
+import 'package:flutter/material.dart';
+
+class AppColors {
+  AppColors(); 
+  final Color primary = const Color(0xFF6200EE);
+  final Color black = const Color(0xFF000000);
+  final Color white = const Color(0xFFFFFFFF);
+  final Color primaryVariant = const Color(0xFF3700B3);
+  final Color secondary = const Color(0xFF03DAC6);
+  final Color secondaryVariant = const Color(0xFF018786);
+  final Color background = const Color(0xFFF5F5F5);
+  final Color surface = const Color(0xFFFFFFFF);
+  final Color error = const Color(0xFFB00020);
+  final Color onPrimary = const Color(0xFFFFFFFF);
+  final Color onSecondary = const Color(0xFF000000);
+  final Color onBackground = const Color(0xFF000000);
+  final Color onSurface = const Color(0xFF000000);
+  final Color onError = const Color(0xFFFFFFFF);
+  final Color scaffoldBackground = const Color(0xFFF5F5F5);
+  final Color appBarBackground = const Color(0xFFFFFFFF);
+  final Color buttonBackground = const Color(0xFF6200EE);
+  final Color buttonText = const Color(0xFFFFFFFF);
+  final Color cardBackground = const Color(0xFFFFFFFF);
+  final Color cardShadow = const Color(0x1A000000);
+  final Color divider = const Color(0x1F000000);
+  final Color hintText = const Color(0x99000000);
+  final Color inputBorder = const Color(0xFFCCCCCC);
+  final Color inputFocusedBorder = const Color(0xFF6200EE);
+  final Color snackbarBackground = const Color(0xFF323232);
+  final Color snackbarText = const Color(0xFFFFFFFF);
+  final Color dialogBackground = const Color(0xFFFFFFFF);
+  final Color dialogTitle = const Color(0xFF000000);
+  final Color dialogContent = const Color(0xFF000000);
+  final Color link = const Color(0xFF1E88E5);
+  final Color success = const Color(0xFF4CAF50);
+  final Color warning = const Color(0xFFFFC107);
+  final Color info = const Color(0xFF2196F3);
+  final Color lightText = const Color(0xFFFFFFFF);
+  final Color darkText = const Color(0xFF000000);
+  final Color lightGray = const Color(0xFFBDBDBD);
+  final Color darkGray = const Color(0xFF424242);
+  final Color transparent = Colors.transparent;
+}
