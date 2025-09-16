@@ -12,6 +12,10 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     on<ToggleMicEvent>(_toggleMicHandle);
     on<SwitchCameraEvent>(_switchCameraHandle);
     on<HangCallEvent>(_hangCall);
+    on(
+      (PhaseUpdateEvent event, Emitter<CallState> emit) =>
+          emit(state.copyWith(phase: event.phase)),
+    );
   }
 
   RTCVideoRenderer get local => _rtc.localRenderer;
@@ -38,9 +42,9 @@ class CallBloc extends Bloc<CallEvent, CallState> {
   ) async {
     try {
       emit(state.copyWith(phase: "creating"));
-      final uid = event.uid;
+      final localUid = event.localUid;
       // creating a roomId
-      final roomId = "${event.localUid}_$uid";
+      final roomId = Uuid().v4();
       await _rtc.getUserMedia();
       await _rtc.createAPeerConnection();
 
@@ -53,10 +57,12 @@ class CallBloc extends Bloc<CallEvent, CallState> {
         });
       });
       final offer = await _rtc.createOffer();
-      final roomid = await _repo.createRoom({
-        'type': offer.type,
-        'sdp': offer.sdp,
-      }, uid);
+      final roomid = await _repo.createRoom(
+        {'type': offer.type, 'sdp': offer.sdp},
+        localUid,
+        event.createdFor,
+        roomId,
+      );
       print(" roomid : $roomid  ============  $roomId");
       emit(state.copyWith(roomId: roomId, phase: 'connecting', inCall: true));
 
@@ -66,7 +72,7 @@ class CallBloc extends Bloc<CallEvent, CallState> {
         final answer = data['answer'];
         if (answer != null) {
           await _rtc.setRemoteDiscription(answer);
-          emit(state.copyWith(phase: 'connected'));
+          add(PhaseUpdateEvent(phase: 'connected'));
         }
       });
 
@@ -92,7 +98,7 @@ class CallBloc extends Bloc<CallEvent, CallState> {
 
     // When we generate ICE, write to callee candidates
     _rtc.onIceCandidate((c) {
-      _repo.addCalleeCandidate(event.roomId, {
+      _repo.addCallerCandidate(event.roomId, {
         'candidate': c.candidate,
         'sdpMid': c.sdpMid,
         'sdpMLineIndex': c.sdpMLineIndex,
@@ -109,11 +115,12 @@ class CallBloc extends Bloc<CallEvent, CallState> {
       'type': answer.type,
       'sdp': answer.sdp,
     });
+
     emit(
       state.copyWith(roomId: event.roomId, inCall: true, phase: 'connected'),
     );
 
-    _candSub = _repo.listenCalleeCandidates(event.roomId).listen((snap) {
+    _candSub = _repo.listenCallerCandidates(event.roomId).listen((snap) {
       for (var doc in snap.docChanges) {
         _rtc.addCandidate(doc.doc.data()!);
       }
@@ -130,7 +137,7 @@ class CallBloc extends Bloc<CallEvent, CallState> {
     SwitchCameraEvent event,
     Emitter<CallState> emit,
   ) async {
-    await _rtc.switchCamera(); 
+    await _rtc.switchCamera();
   }
 
   void _hangCall(HangCallEvent event, Emitter<CallState> emit) async {

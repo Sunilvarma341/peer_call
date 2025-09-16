@@ -11,8 +11,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 class CallScreen extends StatefulWidget {
   final String? joinRoomId;
-  final String? createdUid;
-  const CallScreen({super.key, this.joinRoomId, this.createdUid});
+  final String? createdFor;
+  const CallScreen({super.key, this.joinRoomId, this.createdFor});
 
   @override
   State<CallScreen> createState() => _CallScreenState();
@@ -32,7 +32,7 @@ class _CallScreenState extends State<CallScreen> {
       final user = await localStorage.getUser();
       vm.add(
         CreateRoomEvemt(
-          uid: widget.createdUid ?? "",
+          createdFor: widget.createdFor ?? "",
           localUid: user?.uid ?? '',
         ),
       );
@@ -45,6 +45,8 @@ class _CallScreenState extends State<CallScreen> {
   Widget build(BuildContext context) {
     final vm = context.read<CallBloc>();
     final nv = context.read<AppNavigator>();
+    nv.isCallScreenOpen();
+
     return BlocBuilder<CallBloc, CallState>(
       builder: (context, state) {
         print(" RTC video view ${vm.local} ======= ${vm.remote}");
@@ -55,11 +57,16 @@ class _CallScreenState extends State<CallScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    Expanded(child: RTCVideoView(vm.remote)),
+                    Expanded(
+                      child: RTCVideoView(
+                        vm.remote,
+                        objectFit:
+                            RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                      ),
+                    ),
                     Expanded(
                       child: RTCVideoView(
                         vm.local,
-                        mirror: true,
                         objectFit:
                             RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                       ),

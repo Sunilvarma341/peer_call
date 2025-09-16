@@ -8,6 +8,7 @@ import 'package:peer_call/data/local_storage/local_storage.dart';
 import 'package:peer_call/data/repositories/auth_repo.dart';
 import 'package:peer_call/data/repositories/dashboard_repo.dart';
 import 'package:peer_call/data/repositories/signaling_repo.dart';
+import 'package:peer_call/data/services/local_notification.dart';
 import 'package:peer_call/data/services/webrtc_service.dart';
 import 'package:peer_call/presentation/blocs/auth_bloc/auth_export.dart';
 import 'package:peer_call/presentation/widgets/app_snackbar.dart';
@@ -15,6 +16,7 @@ import 'package:peer_call/presentation/widgets/app_snackbar.dart';
 Future<void> _firebaseInitialization() async {
   try {
     await Firebase.initializeApp();
+    await LocalNotification.instance.initNotifications(); 
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
@@ -47,7 +49,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider.value(value: appNav),
         RepositoryProvider(create: (_) => AppColors()),
         RepositoryProvider(create: (_) => WebRTCService()),
-        RepositoryProvider(create: (_) => SignalingRepo()),
+        RepositoryProvider(create: (_) => SignalingRepo.instance),
         RepositoryProvider(
           create: (_) => AppNavigator(localStorage: localStorage),
         ),

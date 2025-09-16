@@ -10,3 +10,14 @@ class BottomNavIndexChanged extends DashBoardEvent {
 class GetAllUsersList extends DashBoardEvent {
   GetAllUsersList(); 
 }
+
+
+class ListenCallRooms extends DashBoardEvent {
+  final String uid;
+  ListenCallRooms({required this.uid});
+}
+
+class CallRoomCreated extends DashBoardEvent {
+  final CallRoom callRoom;
+  CallRoomCreated(this.callRoom);
+}

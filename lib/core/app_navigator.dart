@@ -34,4 +34,28 @@ class AppNavigator {
       print('$e   pop  error ');
     }
   }
+
+  void navigateToCallScreen(String joinRoomId) {
+    router.push(PAGE.callScreen.path, extra: {'joinRoomId': joinRoomId});
+  }
+
+  String getCurrentRoute() {
+    final routerDelegate = AppNavigator.router.routerDelegate;
+    final RouteMatchList matchList = routerDelegate.currentConfiguration;
+
+    // Get the last matched route
+    final RouteMatch lastMatch = matchList.last;
+
+    // Current route location
+    final String location = matchList.uri.toString();
+
+    debugPrint("📍 Current route: $location   ->  ${lastMatch.route.path}");
+
+    return location;
+  }
+
+  bool isCallScreenOpen() {
+    final current = getCurrentRoute();
+    return current.startsWith(PAGE.callScreen.path);
+  }
 }

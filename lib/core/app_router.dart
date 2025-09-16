@@ -3,9 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peer_call/core/app_navigator.dart';
 import 'package:peer_call/core/pages.dart';
+import 'package:peer_call/data/local_storage/local_storage.dart';
+import 'package:peer_call/data/repositories/dashboard_repo.dart';
 import 'package:peer_call/data/repositories/signaling_repo.dart';
 import 'package:peer_call/data/services/webrtc_service.dart';
 import 'package:peer_call/presentation/blocs/call_bloc/call_export.dart';
+import 'package:peer_call/presentation/blocs/dash_board/dash_board_export.dart';
 import 'package:peer_call/presentation/screens/auth/login_screen.dart';
 import 'package:peer_call/presentation/screens/auth/sign_up_screen.dart';
 import 'package:peer_call/presentation/screens/bottom_nav_bar.dart';
@@ -44,7 +47,15 @@ class AppRouter {
         path: PAGE.bottomNav.path,
         name: PAGE.bottomNav.name,
         builder: (context, state) {
-          return const BottomNavBar();
+          return BlocProvider(
+            create: (context) => DashBoardBloc(
+              dashBoardRepo: context.read<DashboardRepo>(),
+              repo: context.read<SignalingRepo>(),
+              localStorage: context.read<LocalStorage>(),
+              appNav: context.read<AppNavigator>()
+            )..add(GetAllUsersList()),
+            child: const BottomNavBar(),
+          );
         },
       ),
       GoRoute(
@@ -53,17 +64,19 @@ class AppRouter {
         builder: (context, state) {
           final j = state.extra as Map<String, dynamic>?;
           final joinRoomId = j?['joinRoomId'];
-          final uid = j?['uid'];
+          final createdFor = j?['createdFor'];
 
           return BlocProvider(
             create: (context) => CallBloc(
               context.read<WebRTCService>(),
               context.read<SignalingRepo>(),
             )..init(),
-            child: CallScreen(createdUid: uid, joinRoomId: joinRoomId),
+            child: CallScreen(createdFor: createdFor, joinRoomId: joinRoomId),
           );
         },
       ),
     ],
   );
+  
+
 }

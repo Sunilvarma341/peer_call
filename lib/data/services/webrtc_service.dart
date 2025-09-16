@@ -8,19 +8,31 @@ class WebRTCService {
   MediaStream? _localStream;
   MediaStream? get localStream => _localStream;
   final mediaDevices = navigator.mediaDevices;
-  final _config = {
+  // final _config = {
+  //   'iceServers': [
+  //     {'urls': 'stun:stun.l.google.com:19302'}, // add TURN for NAT traversal
+  //     // {'urls': 'turn:your.turn.server:3478', 'username': 'user', 'credential': 'pass'},
+  //   ],
+  // };
+  static const Map<String, dynamic> _config = {
     'iceServers': [
-      {'urls': 'stun:stun.l.google.com:19302'}, // add TURN for NAT traversal
-      // {'urls': 'turn:your.turn.server:3478', 'username': 'user', 'credential': 'pass'},
+      {
+        'urls': [
+          'stun:stun1.l.google.com:19302',
+          'stun:stun2.l.google.com:19302',
+        ],
+      },
     ],
   };
 
   final _constraints = {'mandatory': {}, 'optional': []};
 
-  final localRenderer = RTCVideoRenderer();
-  final remoteRenderer = RTCVideoRenderer();
+  late RTCVideoRenderer localRenderer;
+  late RTCVideoRenderer remoteRenderer;
 
   Future<void> initRenders() async {
+    localRenderer = RTCVideoRenderer();
+    remoteRenderer = RTCVideoRenderer();
     await localRenderer.initialize();
     await remoteRenderer.initialize();
   }
@@ -79,13 +91,44 @@ class WebRTCService {
       //  add local track
       for (MediaStreamTrack track in _localStream!.getTracks()) {
         await _pc!.addTrack(track, _localStream!);
+        print("✅ Added local track: ${track.kind}");
       }
 
+      _pc!.onAddStream = (MediaStream stream) {
+        remoteRenderer.srcObject = stream;
+      };
+
       //  add remote track
+      // _pc!.onTrack = (RTCTrackEvent e) {
+      //   if (e.streams.isNotEmpty) {
+      //     remoteRenderer.srcObject = e.streams.first;
+      //   }
+      // };
       _pc!.onTrack = (RTCTrackEvent e) {
+        print("onTrack event: ${e.streams.length} streams");
         if (e.streams.isNotEmpty) {
           remoteRenderer.srcObject = e.streams.first;
+          for (var track in e.streams.first.getTracks()) {
+            print("==== remote stream  traccking ${track} ======");
+          }
+          print("Remote stream set to renderer: ${e.streams.first.id}");
+          print(
+            "Remote video tracks: ${e.streams.first.getVideoTracks().length}",
+          );
+          print("Remote tracks count: ${e.streams.first.getTracks().length}");
+          print("remoteRenderer.srcObject: ${remoteRenderer.srcObject}");
+          // Check if the renderer is ready
+          print("remoteRenderer.value.isInitialized: ${remoteRenderer.value}");
+        } else {
+          print("No remote streams received in onTrack");
         }
+      };
+
+      _pc!.onIceConnectionState = (state) {
+        print("🌍 ICE connection state: $state");
+      };
+      _pc!.onConnectionState = (state) {
+        print("📡 Peer connection state: $state");
       };
 
       return _pc!;
@@ -98,6 +141,7 @@ class WebRTCService {
   Future<RTCSessionDescription> createOffer() async {
     final offer = await _pc!.createOffer({'offerToReceiveVideo': 1});
     _pc!.setLocalDescription(offer);
+
     return offer;
   }
 
@@ -108,9 +152,16 @@ class WebRTCService {
   }
 
   Future<void> setRemoteDiscription(Map<String, dynamic> sdp) async {
-    await _pc!.setRemoteDescription(
-      RTCSessionDescription(sdp['sdp'], sdp['type']),
-    );
+    try {
+      print("======================================    ${sdp['sdp']}");
+      final desc = RTCSessionDescription(sdp['sdp'], sdp['type']);
+      await _pc!.setRemoteDescription(desc);
+      print("✅ Remote description set: type=${desc.type}");
+      print("✅ SDP length: ${desc.sdp?.length}");
+    } catch (e, st) {
+      print("❌ Failed to set remote description: $e");
+      print(st);
+    }
   }
 
   void onIceCandidate(void Function(RTCIceCandidate) handler) {
@@ -118,9 +169,25 @@ class WebRTCService {
   }
 
   Future<void> addCandidate(Map<String, dynamic> c) async {
-    _pc!.addCandidate(
-      RTCIceCandidate(c['candidate'], c['sdpMid'], c['sdpMLineIndex']),
-    );
+    try {
+      print("📩 Adding ICE candidate...");
+      print("  candidate: ${c['candidate']}");
+      print("  sdpMid: ${c['sdpMid']}");
+      print("  sdpMLineIndex: ${c['sdpMLineIndex']}");
+
+      final ice = RTCIceCandidate(
+        c['candidate'],
+        c['sdpMid'],
+        c['sdpMLineIndex'],
+      );
+
+      await _pc!.addCandidate(ice);
+
+      print("✅ ICE candidate successfully added");
+    } catch (e, st) {
+      print("❌ Failed to add ICE candidate: $e");
+      print(st);
+    }
   }
 
   Future<void> switchCamera() async {

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:peer_call/core/app_colors.dart';
 import 'package:peer_call/core/pages.dart';
 import 'package:peer_call/data/local_storage/local_storage.dart';
 import 'package:peer_call/data/models/user_model.dart';
+import 'package:peer_call/data/repositories/signaling_repo.dart';
 import 'package:peer_call/presentation/blocs/dash_board/dash_board_export.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,16 +18,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  UserModel? user;
-
   @override
   void initState() {
     super.initState();
-    final ls = context.read<LocalStorage>();
-
-    WidgetsBinding.instance.addPostFrameCallback((a) async {
-      user = await ls.getUser();
-    });
   }
 
   @override
@@ -34,9 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return BlocBuilder<DashBoardBloc, DashBoardState>(
       builder: (context, state) {
         final filterList = state.allUsersList
-            .where((e) => e.uid != (user?.uid ?? ''))
+            .where((e) => e.uid != (state.localUser?.uid ?? ''))
             .toList();
-        print("${user?.uid}");
         return SafeArea(
           child: Container(
             padding: EdgeInsets.all(16),
@@ -81,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 print("PRESSED CALL");
                                 context.push(
                                   PAGE.callScreen.path,
-                                  extra: {'uid': user?.uid ?? ""},
+                                  extra: {'createdFor': data.uid},
                                 );
                               },
                               child: Text(
